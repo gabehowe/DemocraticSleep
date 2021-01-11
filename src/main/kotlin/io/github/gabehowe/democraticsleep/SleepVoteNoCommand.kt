@@ -17,8 +17,8 @@ class SleepVoteNoCommand(private val democraticSleep: DemocraticSleep) : Command
         }
         val player = sender
         if(democraticSleep.allUUIDs.contains(sender.uniqueId)
-            && democraticSleep.noUUIDs.contains(sender.uniqueId)
-            && democraticSleep.yesUUIDs.contains(sender.uniqueId)) {
+            || democraticSleep.noUUIDs.contains(sender.uniqueId)
+            || democraticSleep.yesUUIDs.contains(sender.uniqueId)) {
             sender.sendMessage("§cYou already voted tonight!")
             return true
         }

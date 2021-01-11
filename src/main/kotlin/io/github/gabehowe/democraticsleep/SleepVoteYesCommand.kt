@@ -16,8 +16,8 @@ class SleepVoteYesCommand(private val democraticSleep: DemocraticSleep) : Comman
             return true
         }
         if(democraticSleep.allUUIDs.contains(sender.uniqueId)
-            && democraticSleep.noUUIDs.contains(sender.uniqueId)
-            && democraticSleep.yesUUIDs.contains(sender.uniqueId)) {
+            || democraticSleep.noUUIDs.contains(sender.uniqueId)
+            || democraticSleep.yesUUIDs.contains(sender.uniqueId)) {
             sender.sendMessage("§cYou already voted tonight!")
             return true
         }

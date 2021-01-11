@@ -18,16 +18,18 @@ class DemocraticSleepEvents(private val democraticSleep: DemocraticSleep) : List
     }
     @EventHandler
     fun onSleepEvent(event : PlayerBedEnterEvent) {
+        if(event.player.world.time !in 12543..23998) {
+            return
+        }
         if(democraticSleep.someoneSlept) {
             democraticSleep.yesUUIDs.add(event.player.uniqueId)
         }
         if(!democraticSleep.someoneSlept) {
             democraticSleep.someoneSlept = true
             democraticSleep.yesUUIDs.add(event.player.uniqueId)
+
             Bukkit.getServer().broadcastMessage("§6${event.player.displayName} is sleeping, do /sn or /sy to vote to skip the night")
-            if(democraticSleep.voteTime == null) {
-                return
-            }
+
             Bukkit.getServer().scheduler.scheduleSyncDelayedTask(democraticSleep, {
                 if((democraticSleep.yesUUIDs.size - democraticSleep.noUUIDs.size) > (democraticSleep.allUUIDs.size / 2)) {
                     event.player.world.time = 0
@@ -38,6 +40,7 @@ class DemocraticSleepEvents(private val democraticSleep: DemocraticSleep) : List
                 }
                 democraticSleep.noUUIDs.clear()
                 democraticSleep.yesUUIDs.clear()
+                democraticSleep.someoneSlept = false
             },(democraticSleep.voteTime.toDouble() * 20).toLong())
         }
     }

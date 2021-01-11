@@ -4,7 +4,6 @@ import org.bukkit.plugin.java.JavaPlugin
 import java.util.*
 
 class DemocraticSleep : JavaPlugin() {
-    var sleep : Int = 0
     var someoneSlept : Boolean = false
     var yesUUIDs = mutableListOf<UUID>()
     var noUUIDs = mutableListOf<UUID>()
@@ -17,7 +16,6 @@ class DemocraticSleep : JavaPlugin() {
     override fun onEnable() {
         // Plugin startup logic
         someoneSlept = false
-        sleep = 0
         saveDefaultConfig()
         getCommand("sleepvoteno")?.setExecutor(SleepVoteNoCommand(this))
         getCommand("sleepvoteyes")?.setExecutor(SleepVoteYesCommand(this))
