@@ -1,0 +1,16 @@
+name: DemocraticSleep
+version: 0.1.0
+main: io.github.gabehowe.democraticsleep.DemocraticSleep
+api-version: 1.16
+authors: [ gabehowe ]
+description: allows players to vote to skip the night
+website: gabehowe.github.io
+commands:
+  sleepvoteyes:
+    description: votes yes on sleep votes
+    usage: /<command>
+    aliases: [sy, dsy, sleepyes]
+  sleepvoteno:
+    description: votes no on sleep votes
+    usage: /<command>
+    aliases: [sn, dsn, sleepno]
