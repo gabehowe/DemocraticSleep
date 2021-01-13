@@ -15,7 +15,6 @@ class SleepVoteNoCommand(private val democraticSleep: DemocraticSleep) : Command
             sender.sendMessage("§cNo one has slept yet!")
             return true
         }
-        val player = sender
         if(democraticSleep.allUUIDs.contains(sender.uniqueId)
             || democraticSleep.noUUIDs.contains(sender.uniqueId)
             || democraticSleep.yesUUIDs.contains(sender.uniqueId)) {
@@ -23,7 +22,11 @@ class SleepVoteNoCommand(private val democraticSleep: DemocraticSleep) : Command
             return true
         }
         democraticSleep.noUUIDs.add(sender.uniqueId)
+        democraticSleep.totalVotes.inc()
         sender.sendMessage("§6You voted §cNO §6to skipping the night")
+        if(democraticSleep.totalVotes >= democraticSleep.allUUIDs.size) {
+            democraticSleep.attemptNightSkip()
+        }
         return true
     }
 

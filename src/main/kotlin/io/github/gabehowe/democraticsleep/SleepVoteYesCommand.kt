@@ -22,8 +22,12 @@ class SleepVoteYesCommand(private val democraticSleep: DemocraticSleep) : Comman
             return true
         }
         democraticSleep.yesUUIDs.add(sender.uniqueId)
+        democraticSleep.totalVotes.inc()
         sender.sendMessage("§6You voted §aYES §6to skipping the night")
-        return true
+        if(democraticSleep.totalVotes >= democraticSleep.allUUIDs.size) {
+            democraticSleep.attemptNightSkip()
+        }
+        return false
     }
 
 }
