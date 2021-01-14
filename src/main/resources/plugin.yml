@@ -1,5 +1,5 @@
 name: DemocraticSleep
-version: 0.1.0
+version: 0.2.0
 main: io.github.gabehowe.democraticsleep.DemocraticSleep
 api-version: 1.16
 authors: [ gabehowe ]
