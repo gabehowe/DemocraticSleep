@@ -36,6 +36,9 @@ class DemocraticSleep : JavaPlugin() {
     fun attemptNightSkip() {
         if((yesUUIDs.size - noUUIDs.size) > (allUUIDs.size * votePercentage)) {
             for(player in getOnlinePlayers()) {
+                if(player.world.time !in 12543..23998) {
+                    continue
+                }
                 player.world.time = 0
             }
             broadcastMessage("§6Night skipped")

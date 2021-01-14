@@ -25,17 +25,24 @@ class DemocraticSleepEvents(private val democraticSleep: DemocraticSleep) : List
             return
         }
         if(democraticSleep.someoneSlept) {
+            if(democraticSleep.yesUUIDs.contains(event.player.uniqueId) || democraticSleep.noUUIDs.contains(event.player.uniqueId)) {
+                return
+            }
             democraticSleep.yesUUIDs.add(event.player.uniqueId)
         }
         if(!democraticSleep.someoneSlept) {
             democraticSleep.someoneSlept = true
+            if(democraticSleep.yesUUIDs.contains(event.player.uniqueId) || democraticSleep.noUUIDs.contains(event.player.uniqueId)) {
+                return
+            }
             democraticSleep.yesUUIDs.add(event.player.uniqueId)
 
             Bukkit.getServer().broadcastMessage("§6${event.player.displayName} is sleeping, do /sn or /sy to vote to skip the night")
-
-            Bukkit.getServer().scheduler.scheduleSyncDelayedTask(democraticSleep, {
+            democraticSleep.totalVotes = 200
+            Bukkit.getServer().scheduler.runTaskLater(democraticSleep, Runnable {
                 if(democraticSleep.someoneSlept) {
                     democraticSleep.attemptNightSkip()
+
                 }
             },(democraticSleep.voteTime.toDouble() * 20).toLong())
         }
