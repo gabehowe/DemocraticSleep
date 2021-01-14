@@ -18,6 +18,9 @@ class DemocraticSleepEvents(private val democraticSleep: DemocraticSleep) : List
     }
     @EventHandler
     fun onSleepEvent(event : PlayerBedEnterEvent) {
+        if( Bukkit.getOnlinePlayers().size <= 1 ) {
+            return
+        }
         if(event.player.world.time !in 12543..23998) {
             return
         }
