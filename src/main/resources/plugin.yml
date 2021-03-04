@@ -9,8 +9,8 @@ commands:
   sleepvoteyes:
     description: votes yes on sleep votes
     usage: /<command>
-    aliases: [sy, dsy, sleepyes]
+    aliases: [sy, sleepyes]
   sleepvoteno:
     description: votes no on sleep votes
     usage: /<command>
-    aliases: [sn, dsn, sleepno]
+    aliases: [sn, sleepno]
