@@ -2,53 +2,109 @@ package io.github.gabehowe.democraticsleep
 
 import org.bukkit.Bukkit
 import org.bukkit.Bukkit.broadcastMessage
-import org.bukkit.Bukkit.getOnlinePlayers
+import org.bukkit.GameRule
+import org.bukkit.World
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
+import org.bukkit.entity.Player
+import org.bukkit.event.world.TimeSkipEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.util.*
 
 class DemocraticSleep : JavaPlugin() {
-    var someoneSlept : Boolean = false
-    var totalVotes : Int = 0
-    var yesUUIDs = mutableListOf<UUID>()
-    var noUUIDs = mutableListOf<UUID>()
-    var allUUIDs = mutableListOf<UUID>()
-    val voteTime : Number
+    var sleeping = mutableSetOf<UUID>()
+    var votes = mutableMapOf<UUID, Boolean>()
+    var sleepRunnableId: Int? = null
+
+    val voteTimeout: Number
         get() {
-            return (config.get("vote-time") as Number?)!!
+            return (config.get("vote-timeout") as Number?)!!
         }
-    val votePercentage : Double
+    val requiredVoteRatio: Double
         get() {
-            return (config.get("vote-percentage") as Double)
+            return (config.get("required-vote-percentage") as Double)
         }
 
     override fun onEnable() {
         // Plugin startup logic
-        someoneSlept = false
         saveDefaultConfig()
-        getCommand("sleepvoteno")?.setExecutor(SleepVoteNoCommand(this))
-        getCommand("sleepvoteyes")?.setExecutor(SleepVoteYesCommand(this))
-        server.pluginManager.registerEvents(DemocraticSleepEvents(this),this)
+        getCommand("sleepvoteno")?.setExecutor(SleepVoteCommand(this))
+        getCommand("sleepvoteyes")?.setExecutor(SleepVoteCommand(this))
+        server.pluginManager.registerEvents(DemocraticSleepEvents(this), this)
     }
 
-    override fun onDisable() {
-        // Plugin shutdown logic
+    fun cancelVote() {
+        votes.clear()
+        if (sleepRunnableId != null) {
+            Bukkit.getScheduler().cancelTask(sleepRunnableId!!)
+        }
     }
-    fun attemptNightSkip() {
-        if((yesUUIDs.size - noUUIDs.size) > (allUUIDs.size * votePercentage)) {
-            for(player in getOnlinePlayers()) {
-                if(player.world.time !in 12543..23998) {
-                    continue
-                }
-                player.world.time = 0
-            }
-            broadcastMessage("§6Night skipped")
+
+    fun attemptSkipNight(world: World) {
+        val nmsWorld = (world as CraftWorld).handle
+        if (!world.getGameRuleValue(GameRule.DO_DAYLIGHT_CYCLE)!!) {
+            cancelVote()
+            Bukkit.getServer()
+                .broadcastMessage("§4Sleep vote cancelled; gamerule doDaylightCycle prevents skipping night")
+            return
         }
-        else {
-            Bukkit.getServer().broadcastMessage("§6Vote Failed")
+
+        if (!nmsWorld.isNight) {
+            cancelVote()
+            Bukkit.getServer().broadcastMessage("§6Sleep vote cancelled; it's daytime")
+            return
         }
-        noUUIDs.clear()
-        yesUUIDs.clear()
-        someoneSlept = false
-        totalVotes = 0
+
+        if (sleeping.isEmpty()) {
+            Bukkit.getServer().broadcastMessage("§6Sleep vote cancelled; nobody is sleeping")
+        }
+
+        if (voteRatio(world) < requiredVoteRatio) {
+            cancelVote()
+            Bukkit.getServer().broadcastMessage("§6Sleep vote failed")
+            return
+        }
+
+        broadcastMessage("§6Sleep vote passed, skipping night")
+
+        // https://hub.spigotmc.org/stash/projects/SPIGOT/repos/craftbukkit/browse/nms-patches/WorldServer.patch#167-177
+        val l = nmsWorld.dayTime + 24000L
+        val event =
+            TimeSkipEvent(nmsWorld.world, TimeSkipEvent.SkipReason.NIGHT_SKIP, (l - l % 24000L) - nmsWorld.dayTime)
+
+        server.pluginManager.callEvent(event)
+        if (!event.isCancelled) {
+            nmsWorld.dayTime = (nmsWorld.dayTime + event.skipAmount)
+        }
+    }
+
+    private fun voteRatio(world: World): Double {
+        // Double check everything
+        val onlineSleeping = sleeping.filter { isPlayerOnlineAndInOverworld(it) }
+        val onlineYesVotes =
+            votes.filter { isPlayerOnlineAndInOverworld(it.key) && !onlineSleeping.contains(it.key) && it.value }
+        val totalVoteCount = world.players.size
+        val yesVoteCount = onlineSleeping.size + onlineYesVotes.size
+        return yesVoteCount.toDouble() / totalVoteCount
+    }
+
+    fun successfulVote(world: World): Boolean {
+        return voteRatio(world) >= requiredVoteRatio
+    }
+
+    private fun isPlayerOnlineAndInOverworld(uuid: UUID): Boolean {
+        val player = Bukkit.getPlayer(uuid) ?: return false
+        return player.isOnline && player.world.environment == World.Environment.NORMAL
+    }
+
+    fun stopPlayerSleeping(player: Player) {
+        if (!sleeping.contains(player.uniqueId)) {
+            return
+        }
+
+        sleeping.remove(player.uniqueId)
+        if (sleeping.isEmpty()) {
+            Bukkit.getServer().broadcastMessage("§6Sleep vote cancelled; nobody is sleeping")
+            cancelVote()
+        }
     }
 }

@@ -1,4 +1,4 @@
 # time in seconds to wait before cancelling vote
-vote-time: 60
+vote-timeout: 60
 # percentage of people required to skip the night in decimals (must have a decimal point)
-vote-percentage: 0.5
+required-vote-percentage: 0.5
