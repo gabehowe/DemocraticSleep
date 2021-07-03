@@ -2,7 +2,9 @@ package io.github.gabehowe.democraticsleep
 
 import org.bukkit.Bukkit
 import org.bukkit.Bukkit.broadcastMessage
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
+import org.bukkit.GameRule
+import org.bukkit.World
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import org.bukkit.entity.Player
 import org.bukkit.event.world.TimeSkipEvent
 import org.bukkit.plugin.java.JavaPlugin
@@ -37,9 +39,9 @@ class DemocraticSleep : JavaPlugin() {
         }
     }
 
-    fun attemptSkipNight() {
-        val nmsWorld = (Bukkit.getWorld("world")!! as CraftWorld).handle
-        if (!nmsWorld.gameRules.getBoolean(net.minecraft.server.v1_16_R3.GameRules.DO_DAYLIGHT_CYCLE)) {
+    fun attemptSkipNight(world: World) {
+        val nmsWorld = (world as CraftWorld).handle
+        if (!world.getGameRuleValue(GameRule.DO_DAYLIGHT_CYCLE)!!) {
             cancelVote()
             Bukkit.getServer()
                 .broadcastMessage("§4Sleep vote cancelled; gamerule doDaylightCycle prevents skipping night")
@@ -56,7 +58,7 @@ class DemocraticSleep : JavaPlugin() {
             Bukkit.getServer().broadcastMessage("§6Sleep vote cancelled; nobody is sleeping")
         }
 
-        if (voteRatio() < requiredVoteRatio) {
+        if (voteRatio(world) < requiredVoteRatio) {
             cancelVote()
             Bukkit.getServer().broadcastMessage("§6Sleep vote failed")
             return
@@ -75,23 +77,23 @@ class DemocraticSleep : JavaPlugin() {
         }
     }
 
-    private fun voteRatio(): Double {
+    private fun voteRatio(world: World): Double {
         // Double check everything
         val onlineSleeping = sleeping.filter { isPlayerOnlineAndInOverworld(it) }
         val onlineYesVotes =
             votes.filter { isPlayerOnlineAndInOverworld(it.key) && !onlineSleeping.contains(it.key) && it.value }
-        val totalVoteCount = Bukkit.getWorld("world")!!.players.size
+        val totalVoteCount = world.players.size
         val yesVoteCount = onlineSleeping.size + onlineYesVotes.size
         return yesVoteCount.toDouble() / totalVoteCount
     }
 
-    fun successfulVote(): Boolean {
-        return voteRatio() >= requiredVoteRatio
+    fun successfulVote(world: World): Boolean {
+        return voteRatio(world) >= requiredVoteRatio
     }
 
     private fun isPlayerOnlineAndInOverworld(uuid: UUID): Boolean {
         val player = Bukkit.getPlayer(uuid) ?: return false
-        return player.isOnline && player.world.name == "world"
+        return player.isOnline && player.world.environment == World.Environment.NORMAL
     }
 
     fun stopPlayerSleeping(player: Player) {

@@ -2,12 +2,11 @@ package io.github.gabehowe.democraticsleep
 
 import org.bukkit.Bukkit
 import org.bukkit.World
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerBedEnterEvent
 import org.bukkit.event.player.PlayerBedLeaveEvent
-import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.world.TimeSkipEvent
 
@@ -57,8 +56,8 @@ class DemocraticSleepEvents(private val democraticSleep: DemocraticSleep) : List
             return
         }
 
-        if (democraticSleep.successfulVote()) {
-            democraticSleep.attemptSkipNight()
+        if (democraticSleep.successfulVote(event.player.world)) {
+            democraticSleep.attemptSkipNight(event.player.world)
             return
         }
 
@@ -75,7 +74,7 @@ class DemocraticSleepEvents(private val democraticSleep: DemocraticSleep) : List
             democraticSleep,
             {
                 if (democraticSleep.sleeping.isNotEmpty()) {
-                    democraticSleep.attemptSkipNight()
+                    democraticSleep.attemptSkipNight(event.player.world)
                 }
             }, (democraticSleep.voteTimeout.toDouble() * 20).toLong()
         )

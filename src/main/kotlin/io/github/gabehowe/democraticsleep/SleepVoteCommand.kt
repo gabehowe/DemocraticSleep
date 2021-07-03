@@ -1,5 +1,6 @@
 package io.github.gabehowe.democraticsleep
 
+import org.bukkit.World
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
@@ -15,7 +16,7 @@ class SleepVoteCommand(private val democraticSleep: DemocraticSleep) : CommandEx
             sender.sendMessage("§4No one has slept yet.")
             return true
         }
-        if (sender.world.name != "world") {
+        if (sender.world.environment != World.Environment.NORMAL) {
             sender.sendMessage("§4You must be in the overworld to vote.")
             return true
         }
@@ -44,8 +45,8 @@ class SleepVoteCommand(private val democraticSleep: DemocraticSleep) : CommandEx
 
         sender.sendMessage("§6Your vote has been counted.")
 
-        if (democraticSleep.successfulVote()) {
-            democraticSleep.attemptSkipNight()
+        if (democraticSleep.successfulVote(sender.world)) {
+            democraticSleep.attemptSkipNight(sender.world)
         }
 
         return true
